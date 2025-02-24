@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const CandidateApplicationForm = () => {
     const [formData, setFormData] = useState({
@@ -42,16 +43,42 @@ const CandidateApplicationForm = () => {
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
+        
         if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-        } else {
-            // Handle form submission
-            console.log('Form submitted', formData);
+          setErrors(validationErrors);
+          return;
         }
-    };
+      
+        const formDataToSend = new FormData();
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('linkedInUrl', formData.linkedInUrl);
+        formDataToSend.append('resume', formData.resume);
+        formDataToSend.append('skillsExperience', formData.skillsExperience);
+      
+        try {
+          console.log('Sending form data...');
+          const response = await axios.post('/api/uploadResume', formDataToSend, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+            validateStatus: (status) => status < 500,
+          });
+      
+          if (response.status !== 200) {
+            throw new Error(response.data.error || 'Upload failed');
+          }
+      
+          console.log('Upload successful:', response.data);
+          // Handle success (e.g., show success message, reset form)
+        } catch (error) {
+          console.error('Upload error:', error);
+          // Handle error (e.g., show error message to user)
+        }
+      };
 
     return (
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-md">
