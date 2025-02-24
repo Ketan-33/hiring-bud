@@ -81,13 +81,16 @@ router
       const pdfData = await pdfParse(fileBuffer);
       const extractedText = pdfData.text;
 
+      // Process the extracted text to identify key sections
+      const processedText = processResumeText(extractedText);
+
       res.status(200).json({ 
         message: 'File uploaded successfully',
         file: {
           filename: req.file.filename,
           size: req.file.size
         },
-        extractedText: extractedText
+        extractedText: processedText
       });
     } catch (error) {
       console.error('Upload handler error:', error);
@@ -106,4 +109,39 @@ export const config = {
   api: {
     bodyParser: false,
   }
+};
+
+// Function to process extracted resume text
+const processResumeText = (text: string) => {
+  const sections = {
+    skills: '',
+    experience: '',
+    education: ''
+  };
+
+  // Define regex patterns or keywords for each section
+  const skillsPattern = /skills|technical skills|competencies/i;
+  const experiencePattern = /experience|work experience|employment history/i;
+  const educationPattern = /education|academic background|qualifications/i;
+
+  // Split the text into lines
+  const lines = text.split('\n');
+
+  let currentSection = '';
+
+  lines.forEach(line => {
+    if (skillsPattern.test(line)) {
+      currentSection = 'skills';
+    } else if (experiencePattern.test(line)) {
+      currentSection = 'experience';
+    } else if (educationPattern.test(line)) {
+      currentSection = 'education';
+    }
+
+    if (currentSection) {
+      sections[currentSection] += line + '\n';
+    }
+  });
+
+  return sections;
 };
