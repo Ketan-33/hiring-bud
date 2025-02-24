@@ -3,6 +3,7 @@ import multer from 'multer';
 import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
+import pdfParse from 'pdf-parse';
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -72,12 +73,21 @@ router
         mimetype: req.file.mimetype
       });
 
+      // Read the uploaded file
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      const fileBuffer = fs.readFileSync(filePath);
+
+      // Extract text from the PDF
+      const pdfData = await pdfParse(fileBuffer);
+      const extractedText = pdfData.text;
+
       res.status(200).json({ 
         message: 'File uploaded successfully',
         file: {
           filename: req.file.filename,
           size: req.file.size
-        }
+        },
+        extractedText: extractedText
       });
     } catch (error) {
       console.error('Upload handler error:', error);
