@@ -116,13 +116,15 @@ const processResumeText = (text: string) => {
   const sections = {
     skills: '',
     experience: '',
-    education: ''
+    education: '',
+    projects: ''
   };
 
   // Define regex patterns or keywords for each section
   const skillsPattern = /skills|technical skills|competencies/i;
   const experiencePattern = /experience|work experience|employment history/i;
   const educationPattern = /education|academic background|qualifications/i;
+  const projectsPattern = /projects|personal projects|portfolio/i;
 
   // Split the text into lines
   const lines = text.split('\n');
@@ -136,6 +138,8 @@ const processResumeText = (text: string) => {
       currentSection = 'experience';
     } else if (educationPattern.test(line)) {
       currentSection = 'education';
+    } else if (projectsPattern.test(line)) {
+      currentSection = 'projects';
     }
 
     if (currentSection) {
