@@ -2,6 +2,13 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
+import { upsertVector } from '../../lib/pinecone';
+
+const generateDummyVector = (dimension: number): number[] => {
+    const vector = Array.from({ length: dimension }, () => Math.random() * 2 - 1);
+    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+    return vector.map(val => val / magnitude);
+  };
 
 const CandidateApplicationForm = () => {
     const [formData, setFormData] = useState({
@@ -46,37 +53,59 @@ const CandidateApplicationForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
-        
         if (Object.keys(validationErrors).length > 0) {
           setErrors(validationErrors);
           return;
         }
       
         const formDataToSend = new FormData();
-        formDataToSend.append('name', formData.name);
-        formDataToSend.append('email', formData.email);
-        formDataToSend.append('linkedInUrl', formData.linkedInUrl);
-        formDataToSend.append('resume', formData.resume);
-        formDataToSend.append('skillsExperience', formData.skillsExperience);
+        Object.entries(formData).forEach(([key, value]) => {
+          if (value !== null) {
+            formDataToSend.append(key, value);
+          }
+        });
       
         try {
-          console.log('Sending form data...');
-          const response = await axios.post('/api/uploadResume', formDataToSend, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            validateStatus: (status) => status < 500,
+          // Upload resume first
+          const uploadResponse = await axios.post('/api/uploadResume', formDataToSend, {
+            headers: { 'Content-Type': 'multipart/form-data' }
           });
       
-          if (response.status !== 200) {
-            throw new Error(response.data.error || 'Upload failed');
+          if (uploadResponse.status !== 200) {
+            throw new Error(uploadResponse.data.error || 'Upload failed');
           }
       
-          console.log('Upload successful:', response.data);
-          // Handle success (e.g., show success message, reset form)
-        } catch (error) {
-          console.error('Upload error:', error);
-          // Handle error (e.g., show error message to user)
+          // Generate normalized vector
+          const vector = generateDummyVector(1536);
+          const vectorId = `candidate_${Date.now()}`; // Generate unique ID
+      
+          const metadata = {
+            name: formData.name,
+            email: formData.email,
+            linkedInUrl: formData.linkedInUrl,
+            skillsExperience: formData.skillsExperience,
+            resumeId: uploadResponse.data.id,
+            timestamp: new Date().toISOString()
+          };
+      
+          // Upsert to Pinecone with better error handling
+          try {
+            await upsertVector(vectorId, vector, metadata);
+            alert('Application submitted successfully!');
+            setFormData({
+              name: '',
+              email: '',
+              linkedInUrl: '',
+              resume: null,
+              skillsExperience: ''
+            });
+          } catch (pineconeError: any) {
+            console.error('Pinecone error:', pineconeError);
+            alert(`Error saving application: ${pineconeError.response?.data?.message || pineconeError.message}`);
+          }
+        } catch (error: any) {
+          console.error('Submission error:', error);
+          alert(`Error submitting application: ${error.message}`);
         }
       };
 
