@@ -6,18 +6,18 @@ import axios from 'axios';
 
 const VectorSearch = ({ className = '' }) => {
     const [jobDescription, setJobDescription] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<{ id: string; metadata: { name: string; fullResumeText: string; email: string; skills?: string; experience?: string; projects?: string }; score: number }[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [searchCompleted, setSearchCompleted] = useState(false);
     const [summaries, setSummaries] = useState<Record<number, string>>({});
     const [summarizing, setSummarizing] = useState<Record<number, boolean>>({});
-    const [evaluations, setEvaluations] = useState<Record<number, any>>({});
+    const [evaluations, setEvaluations] = useState<Record<number, { score: number; strengths?: string[]; gaps?: string[]; recommendation?: string; feedback?: string; error?: boolean; message?: string }>>({});
     const [evaluating, setEvaluating] = useState<Record<number, boolean>>({});
 
     // const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
-    const summarizeProfile = async (candidate: any, index: number) => {
+    const summarizeProfile = async (candidate: { metadata: { name: string; fullResumeText: string } }, index: number) => {
         if (summarizing[index]) return;
         
         try {
@@ -33,7 +33,7 @@ const VectorSearch = ({ className = '' }) => {
                 ...prev,
                 [index]: response.data.summary
             }));
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error summarizing profile:", err);
             setSummaries(prev => ({
                 ...prev,
@@ -44,7 +44,7 @@ const VectorSearch = ({ className = '' }) => {
         }
     };
 
-    const evaluateCandidate = async (candidate: any, index: number) => {
+    const evaluateCandidate = async (candidate: { metadata: { fullResumeText: string } }, index: number) => {
         if (evaluating[index]) return;
         
         try {
@@ -59,7 +59,7 @@ const VectorSearch = ({ className = '' }) => {
                 ...prev,
                 [index]: response.data
             }));
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error evaluating candidate:", err);
             setEvaluations(prev => ({
                 ...prev,

@@ -63,7 +63,7 @@ export async function upsertVector(
 export async function searchCandidates(
   queryVector: number[],
   topK = 7,
-  filter?: Record<string, any>
+  filter?: Record<string, string | number | boolean>
 ) {
   const endpoint = `${baseUrl}/query`;
   const payload = {

@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         feedback: "Error parsing results. Raw response: " + rawText.substring(0, 500)
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error evaluating candidate:', error);
     return res.status(500).json({ 
       error: 'Failed to evaluate candidate',

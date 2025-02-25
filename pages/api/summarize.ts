@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const summary = response.text();
     
     return res.status(200).json({ summary });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error summarizing profile:', error);
     return res.status(500).json({ 
       error: 'Failed to summarize profile',

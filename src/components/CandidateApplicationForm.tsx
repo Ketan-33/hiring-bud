@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { upsertVector } from '../lib/pinecone';
 import { getTextEmbedding } from '../lib/textEmbedding';
-import Image from 'next/image';
+// import Image from 'next/image';
 
 const CandidateApplicationForm = ({ className = '' }) => {
     const [formData, setFormData] = useState({
@@ -121,7 +121,7 @@ const CandidateApplicationForm = ({ className = '' }) => {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Application Submitted!</h2>
-            <p className="text-gray-600 mb-6">Thank you for applying. We'll review your application and get back to you soon.</p>
+            <p className="text-gray-600 mb-6">Thank you for applying. We&#39;ll review your application and get back to you soon.</p>
             <button 
               onClick={() => setSubmitSuccess(false)} 
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200"
