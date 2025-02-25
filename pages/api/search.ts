@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { searchCandidatesByJobDescription } from '../../lib/searchResult';
+import { searchCandidatesByJobDescription } from '../../src/lib/searchResult';
 
 export default async function handler(
   req: NextApiRequest,
