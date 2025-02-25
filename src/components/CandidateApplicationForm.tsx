@@ -7,7 +7,13 @@ import { getTextEmbedding } from '../lib/textEmbedding';
 // import Image from 'next/image';
 
 const CandidateApplicationForm = ({ className = '' }) => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        name: string;
+        email: string;
+        linkedInUrl: string;
+        resume: File | null;
+        skillsExperience: string;
+    }>({
         name: '',
         email: '',
         linkedInUrl: '',
@@ -17,9 +23,9 @@ const CandidateApplicationForm = ({ className = '' }) => {
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
@@ -27,15 +33,17 @@ const CandidateApplicationForm = ({ className = '' }) => {
         });
     };
 
-    const handleFileChange = (e) => {
-        setFormData({
-            ...formData,
-            resume: e.target.files[0]
-        });
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setFormData({
+                ...formData,
+                resume: e.target.files[0]
+            });
+        }
     };
 
-    const validate = () => {
-        const newErrors = {};
+    const validate = (): { [key: string]: string } => {
+        const newErrors: { [key: string]: string } = {};
         if (!formData.name) newErrors.name = 'Name is required';
         if (!formData.email) {
             newErrors.email = 'Email is required';
@@ -48,7 +56,7 @@ const CandidateApplicationForm = ({ className = '' }) => {
         return newErrors;
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const validationErrors = validate();
       if (Object.keys(validationErrors).length > 0) {
@@ -101,7 +109,7 @@ const CandidateApplicationForm = ({ className = '' }) => {
           resume: null,
           skillsExperience: ''
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Submission error:', error);
         setErrors({ submit: `Error: ${error.message || 'Something went wrong'}` });
       } finally {

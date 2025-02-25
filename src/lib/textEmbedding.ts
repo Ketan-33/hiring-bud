@@ -13,7 +13,7 @@ export async function getTextEmbedding(text: string): Promise<number[]> {
   try {
     const client = ModelClient(
       endpoint, 
-      new AzureKeyCredential(process.env.NEXT_PUBLIC_AZURE_AI_KEY)
+      new AzureKeyCredential(process.env.NEXT_PUBLIC_AZURE_AI_KEY!)
     );
 
     const response = await client.path("/embeddings").post({

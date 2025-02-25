@@ -37,7 +37,7 @@ const VectorSearch = ({ className = '' }) => {
             console.error("Error summarizing profile:", err);
             setSummaries(prev => ({
                 ...prev,
-                [index]: err.response?.data?.error || "Failed to generate summary. Please try again."
+                [index]: (err as any).response?.data?.error || "Failed to generate summary. Please try again."
             }));
         } finally {
             setSummarizing(prev => ({ ...prev, [index]: false }));
@@ -64,8 +64,9 @@ const VectorSearch = ({ className = '' }) => {
             setEvaluations(prev => ({
                 ...prev,
                 [index]: {
+                    score: 0,
                     error: true,
-                    message: err.response?.data?.error || "Failed to evaluate candidate."
+                    message: (err as any).response?.data?.error || "Failed to evaluate candidate."
                 }
             }));
         } finally {

@@ -46,16 +46,17 @@ export async function upsertVector(
     });
     return response.data;
   } catch (error: unknown) {
+    const err = error as any;
     console.error('Pinecone upsert error details:', {
-      status: error.response?.status,
-      data: error.response?.data,
+      status: err.response?.status,
+      data: err.response?.data,
       endpoint,
       payloadStructure: {
         ...payload,
         vectors: [`${payload.vectors.length} vectors`]
       }
     });
-    throw error;
+    throw err;
   }
 }
 
@@ -80,7 +81,7 @@ export async function searchCandidates(
         'Content-Type': 'application/json',
       },
     });
-    return response.data.matches.map(match => ({
+    return response.data.matches.map((match: { score: number; metadata: Record<string, string | number | boolean> }) => ({
       score: match.score,
       metadata: match.metadata
     }));
