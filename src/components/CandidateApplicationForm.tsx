@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { upsertVector } from '../../lib/pinecone';
+import { getTextEmbedding } from '../../lib/textEmbedding';
 
-const generateDummyVector = (dimension: number): number[] => {
-    const vector = Array.from({ length: dimension }, () => Math.random() * 2 - 1);
-    const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-    return vector.map(val => val / magnitude);
-  };
+// const generateDummyVector = (dimension: number): number[] => {
+//     const vector = Array.from({ length: dimension }, () => Math.random() * 2 - 1);
+//     const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+//     return vector.map(val => val / magnitude);
+//   };
 
 const CandidateApplicationForm = () => {
     const [formData, setFormData] = useState({
@@ -75,10 +76,11 @@ const CandidateApplicationForm = () => {
           throw new Error(uploadResponse.data.error || 'Upload failed');
         }
     
-        // Generate normalized vector
-        const vector = generateDummyVector(1536);
-        const vectorId = `candidate_${Date.now()}`; // Generate unique ID
+        // Generate embedding from resume text
+        const embedding = await getTextEmbedding(uploadResponse.data.resumeContent.fullText);
+        const vectorId = `candidate_${Date.now()}`;
     
+        // Create metadata object
         const metadata = {
           name: formData.name,
           email: formData.email,
@@ -86,7 +88,6 @@ const CandidateApplicationForm = () => {
           skillsExperience: formData.skillsExperience,
           resumeId: uploadResponse.data.file.id,
           timestamp: new Date().toISOString(),
-          // Add resume sections to metadata
           skills: uploadResponse.data.resumeContent.sections.skills,
           experience: uploadResponse.data.resumeContent.sections.experience,
           education: uploadResponse.data.resumeContent.sections.education,
@@ -94,9 +95,9 @@ const CandidateApplicationForm = () => {
           fullResumeText: uploadResponse.data.resumeContent.fullText
         };
     
-        // Upsert to Pinecone with better error handling
+        // Single upsert to Pinecone with error handling
         try {
-          await upsertVector(vectorId, vector, metadata);
+          await upsertVector(vectorId, embedding, metadata);
           alert('Application submitted successfully!');
           setFormData({
             name: '',

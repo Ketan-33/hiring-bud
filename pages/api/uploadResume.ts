@@ -121,31 +121,35 @@ const processResumeText = (text: string) => {
     skills: '',
     experience: '',
     education: '',
-    projects: ''
+    projects: '',
+    contact: '', // Added contact section
+    summary: ''  // Added summary section
   };
 
-  // Define regex patterns or keywords for each section
-  const skillsPattern = /skills|technical skills|competencies/i;
-  const experiencePattern = /experience|work experience|employment history/i;
-  const educationPattern = /education|academic background|qualifications/i;
-  const projectsPattern = /projects|personal projects|portfolio/i;
+  // Enhanced regex patterns
+  const skillsPattern = /(?:skills|technical skills|competencies|technologies|tools|programming languages)[:]\s*/i;
+  const experiencePattern = /(?:experience|work experience|employment history|work history)[:]\s*/i;
+  const educationPattern = /(?:education|academic|qualifications|degrees)[:]\s*/i;
+  const projectsPattern = /(?:projects|personal projects|portfolio)[:]\s*/i;
+  const contactPattern = /(?:contact|email|phone|address)[:]\s*/i;
+  const summaryPattern = /(?:summary|profile|objective|about)[:]\s*/i;
 
-  // Split the text into lines
-  const lines = text.split('\n');
-
+  const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
   let currentSection = '';
 
-  lines.forEach(line => {
-    if (skillsPattern.test(line)) {
-      currentSection = 'skills';
-    } else if (experiencePattern.test(line)) {
-      currentSection = 'experience';
-    } else if (educationPattern.test(line)) {
-      currentSection = 'education';
-    } else if (projectsPattern.test(line)) {
-      currentSection = 'projects';
-    }
+  // Initialize summary with first few lines if no summary section is found
+  sections.summary = lines.slice(0, 3).join('\n');
 
+  lines.forEach(line => {
+    // Check for section headers
+    if (skillsPattern.test(line)) currentSection = 'skills';
+    else if (experiencePattern.test(line)) currentSection = 'experience';
+    else if (educationPattern.test(line)) currentSection = 'education';
+    else if (projectsPattern.test(line)) currentSection = 'projects';
+    else if (contactPattern.test(line)) currentSection = 'contact';
+    else if (summaryPattern.test(line)) currentSection = 'summary';
+
+    // Add line to current section
     if (currentSection) {
       sections[currentSection] += line + '\n';
     }

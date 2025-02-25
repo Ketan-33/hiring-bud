@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const baseUrl = process.env.NEXT_PUBLIC_PINECONE_BASE_URL;
 const pineconeApiKey = process.env.NEXT_PUBLIC_PINECONE_API_KEY;
-const VECTOR_DIMENSION = 1536;
+const VECTOR_DIMENSION = 3072;
 
 if (!baseUrl || !pineconeApiKey) {
   throw new Error('Missing Pinecone environment variables');
