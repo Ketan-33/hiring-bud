@@ -12,6 +12,8 @@ const VectorSearch = ({ className = '' }) => {
     const [searchCompleted, setSearchCompleted] = useState(false);
     const [summaries, setSummaries] = useState<Record<number, string>>({});
     const [summarizing, setSummarizing] = useState<Record<number, boolean>>({});
+    const [evaluations, setEvaluations] = useState<Record<number, any>>({});
+    const [evaluating, setEvaluating] = useState<Record<number, boolean>>({});
 
     const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
@@ -21,16 +23,6 @@ const VectorSearch = ({ className = '' }) => {
         try {
             setSummarizing(prev => ({ ...prev, [index]: true }));
             
-            // const prompt = `
-            //     Please provide a concise professional summary for this candidate profile:
-                
-            //     Name: ${candidate.metadata.name}
-            //     Skills: ${candidate.metadata.skills || 'Not specified'}
-            //     Experience: ${candidate.metadata.experience || 'Not specified'}
-            //     Projects: ${candidate.metadata.projects || 'Not specified'}
-                
-            //     Generate a 2-3 sentence professional summary highlighting key strengths experience and projects.
-            // `;
             const prompt = `
             Create a brief professional summary for the following candidate profile:
             
@@ -57,6 +49,35 @@ const VectorSearch = ({ className = '' }) => {
             }));
         } finally {
             setSummarizing(prev => ({ ...prev, [index]: false }));
+        }
+    };
+
+    const evaluateCandidate = async (candidate: any, index: number) => {
+        if (evaluating[index]) return;
+        
+        try {
+            setEvaluating(prev => ({ ...prev, [index]: true }));
+            
+            const response = await axios.post('/api/evaluate', {
+                candidateProfile: candidate.metadata.fullResumeText,
+                jobDescription: jobDescription
+            });
+            
+            setEvaluations(prev => ({
+                ...prev,
+                [index]: response.data
+            }));
+        } catch (err: any) {
+            console.error("Error evaluating candidate:", err);
+            setEvaluations(prev => ({
+                ...prev,
+                [index]: {
+                    error: true,
+                    message: err.response?.data?.error || "Failed to evaluate candidate."
+                }
+            }));
+        } finally {
+            setEvaluating(prev => ({ ...prev, [index]: false }));
         }
     };
 
@@ -136,13 +157,28 @@ const VectorSearch = ({ className = '' }) => {
                                 {results.map((candidate, index) => (
                                     <div key={candidate.id || `candidate-${index}`} 
                                         className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="flex items-center mb-4">
-                                            <div className="bg-indigo-100 rounded-full p-2 mr-3">
-                                                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                                </svg>
+                                        <div className="flex items-center mb-4 justify-between">
+                                            <div className="flex items-center">
+                                                <div className="bg-indigo-100 rounded-full p-2 mr-3">
+                                                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                    </svg>
+                                                </div>
+                                                <h2 className="text-xl font-bold text-gray-800">{candidate.metadata.name}</h2>
                                             </div>
-                                            <h2 className="text-xl font-bold text-gray-800">{candidate.metadata.name}</h2>
+                                            
+                                            <button 
+                                                className={`px-3 py-1 rounded text-sm ${
+                                                    evaluating[index] 
+                                                        ? 'bg-gray-300 text-gray-700 cursor-not-allowed' 
+                                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                }`}
+                                                onClick={() => evaluateCandidate(candidate, index)}
+                                                disabled={evaluating[index] || !jobDescription.trim()}
+                                                title={!jobDescription.trim() ? "Job description required" : ""}
+                                            >
+                                                {evaluating[index] ? 'Evaluating...' : 'AI Evaluate'}
+                                            </button>
                                         </div>
                                         
                                         <div className="mb-1">
@@ -165,12 +201,12 @@ const VectorSearch = ({ className = '' }) => {
                                                 </div>
                                             )}
                                             
-                                            {candidate.metadata.experience && (
+                                            {/* {candidate.metadata.experience && (
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-700">Experience</h3>
                                                     <p className="text-gray-600 text-sm">{candidate.metadata.experience}</p>
                                                 </div>
-                                            )}
+                                            )} */}
                                         </div>
                                         
                                         <div className="mt-4 pt-4 border-t border-gray-100">
@@ -179,8 +215,12 @@ const VectorSearch = ({ className = '' }) => {
                                                     className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200"
                                                     onClick={() => {
                                                         const projectsSection = document.getElementById(`projects-${index}`);
+                                                        const experienceSection = document.getElementById(`experience-${index}`);
                                                         if (projectsSection) {
                                                             projectsSection.classList.toggle('hidden');
+                                                        }
+                                                        if (experienceSection) {
+                                                            experienceSection.classList.toggle('hidden');
                                                         }
                                                     }}
                                                 >
@@ -201,6 +241,14 @@ const VectorSearch = ({ className = '' }) => {
                                             </div>
                                         
                                             
+                                            <div id={`experience-${index}`} className="hidden">
+                                                {candidate.metadata.experience && (
+                                                    <div>
+                                                        <h3 className="text-sm font-semibold text-gray-700">Experience</h3>
+                                                        <p className="text-gray-600 text-sm">{candidate.metadata.experience}</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                             <div id={`projects-${index}`} className="hidden">
                                                 {candidate.metadata.projects && (
                                                     <div>
@@ -214,6 +262,65 @@ const VectorSearch = ({ className = '' }) => {
                                                 <div className="mt-3 p-3 bg-indigo-50 rounded-lg">
                                                     <h4 className="text-sm font-semibold text-gray-700 mb-1">AI-Generated Summary:</h4>
                                                     <p className="text-sm text-gray-700">{summaries[index]}</p>
+                                                </div>
+                                            )}
+
+                                            {evaluations[index] && !evaluations[index].error && (
+                                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                                    <h3 className="text-md font-semibold text-gray-800 mb-2">AI Evaluation Results</h3>
+                                                    
+                                                    <div className="flex items-center mb-3">
+                                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                                            <div className="h-2.5 rounded-full" 
+                                                                style={{
+                                                                    width: `${evaluations[index].score}%`,
+                                                                    backgroundColor: evaluations[index].score >= 70 
+                                                                        ? '#22c55e' : evaluations[index].score >= 40 
+                                                                        ? '#f59e0b' : '#ef4444'
+                                                                }}>
+                                                            </div>
+                                                        </div>
+                                                        <span className="ml-2 text-sm font-medium text-gray-700">{evaluations[index].score}%</span>
+                                                    </div>
+                                                    
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                                        <div className="p-3 bg-green-50 rounded-lg">
+                                                            <h4 className="text-sm font-semibold text-green-800 mb-1">Strengths</h4>
+                                                            <ul className="list-disc list-inside text-xs text-green-700">
+                                                                {evaluations[index].strengths?.map((strength: string, i: number) => (
+                                                                    <li key={`strength-${i}`}>{strength}</li>
+                                                                )) || <li>No strengths identified</li>}
+                                                            </ul>
+                                                        </div>
+                                                        
+                                                        <div className="p-3 bg-amber-50 rounded-lg">
+                                                            <h4 className="text-sm font-semibold text-amber-800 mb-1">Skill Gaps</h4>
+                                                            <ul className="list-disc list-inside text-xs text-amber-700">
+                                                                {evaluations[index].gaps?.map((gap: string, i: number) => (
+                                                                    <li key={`gap-${i}`}>{gap}</li>
+                                                                )) || <li>No gaps identified</li>}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="p-3 bg-gray-50 rounded-lg mb-2">
+                                                        <h4 className="text-sm font-semibold text-gray-800 mb-1">
+                                                            Recommendation:
+                                                            <span className={`ml-2 ${
+                                                                evaluations[index].recommendation?.toLowerCase().includes('hire') ? 'text-green-600' :
+                                                                evaluations[index].recommendation?.toLowerCase().includes('consider') ? 'text-amber-600' : 'text-red-600'
+                                                            }`}>
+                                                                {evaluations[index].recommendation}
+                                                            </span>
+                                                        </h4>
+                                                        <p className="text-sm text-gray-700">{evaluations[index].feedback}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {evaluations[index]?.error && (
+                                                <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm">
+                                                    {evaluations[index].message}
                                                 </div>
                                             )}
                                         </div>
