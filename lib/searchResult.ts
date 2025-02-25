@@ -7,6 +7,7 @@ export interface SearchResult {
   metadata: {
     name: string;
     email: string;
+    fullText: string;
     sections: {
       skills: string;
       experience: string;
