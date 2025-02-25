@@ -62,7 +62,7 @@ export async function upsertVector(
 
 export async function searchCandidates(
   queryVector: number[],
-  topK = 5,
+  topK = 7,
   filter?: Record<string, any>
 ) {
   const endpoint = `${baseUrl}/query`;
@@ -93,7 +93,7 @@ export async function searchCandidates(
 // Function to query vectors from Pinecone
 export async function queryVector(
   queryVector: number[],
-  topK = 5
+  topK = 7
 ) {
   const endpoint = `${baseUrl}/query`;
   const payload = {

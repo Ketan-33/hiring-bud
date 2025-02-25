@@ -121,18 +121,34 @@ const VectorSearch = ({ className = '' }) => {
                                                 </div>
                                             )}
                                             
-                                            {candidate.metadata.projects && (
+                                            {/* {candidate.metadata.projects && (
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-700">Projects</h3>
                                                     <p className="text-gray-600 text-sm">{candidate.metadata.projects}</p>
                                                 </div>
-                                            )}
+                                            )} */}
                                         </div>
                                         
                                         <div className="mt-4 pt-4 border-t border-gray-100">
-                                            <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200">
+                                            <button 
+                                                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200"
+                                                onClick={() => {
+                                                    const projectsSection = document.getElementById(`projects-${index}`);
+                                                    if (projectsSection) {
+                                                        projectsSection.classList.toggle('hidden');
+                                                    }
+                                                }}
+                                            >
                                                 View Full Profile
                                             </button>
+                                            <div id={`projects-${index}`} className="hidden">
+                                                {candidate.metadata.projects && (
+                                                    <div>
+                                                        <h3 className="text-sm font-semibold text-gray-700">Projects</h3>
+                                                        <p className="text-gray-600 text-sm">{candidate.metadata.projects}</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

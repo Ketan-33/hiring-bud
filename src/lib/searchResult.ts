@@ -19,7 +19,7 @@ export interface SearchResult {
 
 export async function searchCandidatesByJobDescription(
   jobDescription: string,
-  limit: number = 5
+  limit: number = 7
 ): Promise<SearchResult[]> {
   // Generate embedding for job description
   const embedding = await getTextEmbedding(jobDescription);
