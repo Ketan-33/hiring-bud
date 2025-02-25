@@ -122,38 +122,50 @@ const processResumeText = (text: string) => {
     experience: '',
     education: '',
     projects: '',
-    contact: '', // Added contact section
-    summary: ''  // Added summary section
+    contact: '',
+    summary: ''
   };
 
-  // Enhanced regex patterns
-  const skillsPattern = /(?:skills|technical skills|competencies|technologies|tools|programming languages)[:]\s*/i;
-  const experiencePattern = /(?:experience|work experience|employment history|work history)[:]\s*/i;
-  const educationPattern = /(?:education|academic|qualifications|degrees)[:]\s*/i;
-  const projectsPattern = /(?:projects|personal projects|portfolio)[:]\s*/i;
-  const contactPattern = /(?:contact|email|phone|address)[:]\s*/i;
-  const summaryPattern = /(?:summary|profile|objective|about)[:]\s*/i;
+  // Improved regex patterns - more flexible matching
+  const skillsPattern = /\b(?:skills|technical skills|competencies|technologies|tools|programming languages)\b/i;
+  const experiencePattern = /\b(?:experience|work experience|employment history|work history)\b/i;
+  const educationPattern = /\b(?:education|academic|qualifications|degrees)\b/i;
+  const projectsPattern = /\b(?:projects|personal projects|portfolio)\b/i;
+  const contactPattern = /\b(?:contact|email|phone|address)\b/i;
+  const summaryPattern = /\b(?:summary|profile|objective|about)\b/i;
 
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
   let currentSection = '';
 
-  // Initialize summary with first few lines if no summary section is found
-  sections.summary = lines.slice(0, 3).join('\n');
+  // Initialize summary with first few lines if they don't match any other section
+  if (!lines[0]?.match(contactPattern)) {
+    sections.summary = lines.slice(0, 3).join('\n');
+  }
 
-  lines.forEach(line => {
-    // Check for section headers
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Check for section headers without requiring colons
     if (skillsPattern.test(line)) currentSection = 'skills';
     else if (experiencePattern.test(line)) currentSection = 'experience';
     else if (educationPattern.test(line)) currentSection = 'education';
     else if (projectsPattern.test(line)) currentSection = 'projects';
     else if (contactPattern.test(line)) currentSection = 'contact';
     else if (summaryPattern.test(line)) currentSection = 'summary';
-
-    // Add line to current section
-    if (currentSection) {
+    
+    // Add content to current section if we're in a section
+    if (currentSection && !line.match(/^[\s\t]*$/)) {
       sections[currentSection] += line + '\n';
     }
+  }
+
+  // Clean up sections by removing empty ones
+  Object.keys(sections).forEach(key => {
+    sections[key] = sections[key].trim();
   });
+
+  // Debug log to help identify issues
+  console.log('Processed sections:', sections);
 
   return sections;
 };
