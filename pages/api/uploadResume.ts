@@ -8,7 +8,7 @@ import pdfParse from 'pdf-parse';
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads');
+    const uploadDir = '/tmp/uploads';
     // Ensure upload directory exists
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -74,7 +74,7 @@ router
       });
 
       // Read the uploaded file
-      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      const filePath = path.join('/tmp/uploads', req.file.filename);
       const fileBuffer = fs.readFileSync(filePath);
 
       // Extract text from the PDF
