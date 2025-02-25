@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+# HiringBud
+
+HiringBud is an AI-powered hiring assistant that leverages Google Gemini API and Retrieval-Augmented Generation (RAG) to streamline the candidate evaluation process.
+
+## Overview
+
+HiringBud simplifies and enhances the recruitment process by automatically parsing resumes, matching candidates with job descriptions, and providing AI-powered evaluations. The application helps recruiters quickly identify the most suitable candidates for their positions based on skills, experience, and qualifications.
+
+![HiringBud Screenshot](./public/image.png)
+![HiringBud Screenshot](./public/image2.png)
+![HiringBud Screenshot](./public/image3.png)
+![HiringBud Screenshot](./public/image4.png)
+
+
+
+## Features
+
+- **Resume Parsing**: Extract text and structured information from PDF resumes
+- **Candidate Application Form**: User-friendly interface for candidate submissions
+- **Vector Search**: Store and retrieve candidate profiles using semantic search
+- **AI-Powered Evaluation**:
+  - Resume summarization
+  - Candidate-job description matching
+  - Skills gap analysis
+  - Automated scoring and recommendations
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **AI & ML**:
+  - Google Gemini API for natural language processing
+  - Vector embeddings for semantic search
+- **Vector Database**: Pinecone
+- **PDF Processing**: pdf-parse
+- **Data Storage**: Local file system / Pinecone vector database
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js v16+ and npm
+- Google Gemini API key
+- Pinecone account and API key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+   ```sh
+   git clone <repository-url>
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Create a `.env` file in the project root with the following variables:
+   ```env
+   GOOGLE_GEMINI_API_KEY=your_google_gemini_api_key
+   PINECONE_API_KEY=your_pinecone_api_key
+   ```
+4. Start the development server:
+   ```sh
+   npm run dev
+   ```
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to access HiringBud.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage Guide
 
-## Learn More
+### Adding Job Descriptions
 
-To learn more about Next.js, take a look at the following resources:
+1. Navigate to the "Job Descriptions" page
+2. Click "Add New Job Description"
+3. Fill in the job details and requirements
+4. Submit to add to the database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Candidate Application
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Share the application URL with candidates
+2. Candidates complete the form and upload their resume
+3. System automatically parses and processes the resume
 
-## Deploy on Vercel
+### Candidate Evaluation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Go to the "Candidate Search" page
+2. Enter a job description or select an existing one
+3. View matching candidates ranked by relevance
+4. Click "Generate Summary" to get an AI-powered candidate profile
+5. Click "Evaluate Fit" to see detailed candidate-job matching analysis
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+### Implementation Details
+
+#### Resume Parsing
+
+The application uses pdf-parse to extract text from PDF resumes. The parsed text is then processed to identify key sections (education, experience, skills) using regular expressions and heuristics.
+
+#### RAG Implementation
+
+- **Embedding Generation**: Resume text is converted into vector embeddings
+- **Vector Storage**: Embeddings are stored in Pinecone with candidate metadata
+- **Semantic Search**: Job descriptions are converted to vectors and used for similarity search
+- **Result Enhancement**: Top matches are retrieved and enhanced with AI-generated insights
+
+#### Google Gemini Integration
+
+The Gemini API is used for:
+- **Summarization**: Condensing lengthy resumes into concise profiles
+- **Evaluation**: Comparing candidate profiles with job requirements
+- **Feedback Generation**: Providing insights on skills gaps and candidate suitability
+
+## Future Improvements
+
+- OCR capability for scanned resumes
+- Multi-language support
+- Interview question generation based on candidate profiles
+- Advanced analytics dashboard for recruitment metrics
+- Integration with ATS systems
+
+## License
+
+MIT
+
+## Acknowledgements
+
+- Google Gemini AI
+- Pinecone Vector Database
+- Next.js
+- pdf-parse
