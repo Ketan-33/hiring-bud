@@ -1,4 +1,4 @@
-import { getTextEmbedding } from './textEmbeddingService';
+import { getTextEmbedding } from './textEmbedding';
 import { searchCandidates } from './pinecone';
 
 export interface SearchResult {

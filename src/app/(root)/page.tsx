@@ -1,5 +1,6 @@
 import CandidateApplicationForm from "@/components/CandidateApplicationForm";
 // import Image from "next/image";
+import VectorSearch from "@/components/VectorSearch";
 
 export default function Home() {
   return (
@@ -7,6 +8,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-6">Candidate Application Form</h1>
 
         <CandidateApplicationForm/>
+        <VectorSearch/>
       
     </div>
   );
