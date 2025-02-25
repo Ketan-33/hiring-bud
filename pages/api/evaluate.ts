@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error evaluating candidate:', error);
     return res.status(500).json({ 
       error: 'Failed to evaluate candidate',
-      details: error.message 
+      details: (error instanceof Error) ? error.message : 'Unknown error'
     });
   }
 }

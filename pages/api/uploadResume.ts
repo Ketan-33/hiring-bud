@@ -26,7 +26,7 @@ const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     if (file.mimetype !== 'application/pdf') {
-      cb(new Error('Only PDF files are allowed!'), false);
+      cb(new Error('Only PDF files are allowed!') as any, false);
     } else {
       cb(null, true);
     }
@@ -47,7 +47,7 @@ router
     console.log('Processing upload request...');
     try {
       await new Promise((resolve, reject) => {
-        upload.single('resume')(req, res, (err) => {
+        upload.single('resume')(req as any, res as any, (err: any) => {
           if (err) {
             console.error('Upload error:', err);
             reject(err);
@@ -58,7 +58,7 @@ router
       next();
     } catch (error) {
       console.error('Middleware error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   })
   .post(async (req, res) => {
@@ -98,14 +98,14 @@ router
       });
     } catch (error) {
       console.error('Upload handler error:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
 export default router.handler({
   onError: (err, req, res) => {
     console.error('Router error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: (err as Error).message });
   }
 });
 
@@ -155,13 +155,14 @@ const processResumeText = (text: string) => {
     
     // Add content to current section if we're in a section
     if (currentSection && !line.match(/^[\s\t]*$/)) {
-      sections[currentSection] += line + '\n';
+      sections[currentSection as keyof typeof sections] += line + '\n';
     }
   }
 
   // Clean up sections by removing empty ones
   Object.keys(sections).forEach(key => {
-    sections[key] = sections[key].trim();
+    const sectionKey = key as keyof typeof sections;
+    sections[sectionKey] = sections[sectionKey].trim();
   });
 
   // Debug log to help identify issues

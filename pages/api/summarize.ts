@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error summarizing profile:', error);
     return res.status(500).json({ 
       error: 'Failed to summarize profile',
-      details: error.message || 'Unknown server error'
+      details: (error as Error).message || 'Unknown server error'
     });
   }
 }

@@ -25,6 +25,6 @@ export default async function handler(
     });
   } catch (error) {
     console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed' });
+    res.status(500).json({ error: 'Search failed', details: (error as Error).message || 'Unknown server error' });
   }
 }
