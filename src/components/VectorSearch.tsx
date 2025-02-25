@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const VectorSearch = ({ className = '' }) => {
     const [jobDescription, setJobDescription] = useState('');
@@ -15,7 +15,7 @@ const VectorSearch = ({ className = '' }) => {
     const [evaluations, setEvaluations] = useState<Record<number, any>>({});
     const [evaluating, setEvaluating] = useState<Record<number, boolean>>({});
 
-    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+    // const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
     const summarizeProfile = async (candidate: any, index: number) => {
         if (summarizing[index]) return;
@@ -23,29 +23,21 @@ const VectorSearch = ({ className = '' }) => {
         try {
             setSummarizing(prev => ({ ...prev, [index]: true }));
             
-            const prompt = `
-            Create a brief professional summary for the following candidate profile:
-            
-            Name: ${candidate.metadata.name}
-            Resume: ${candidate.metadata.fullResumeText}
-            
-            Summarize the candidate's key strengths, work experience, and notable projects in 2-3 sentences.
-        `;
-            
-            const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const summary = response.text();
+            // Call the API endpoint for summarization
+            const response = await axios.post('/api/summarize', {
+                name: candidate.metadata.name,
+                fullResumeText: candidate.metadata.fullResumeText
+            });
             
             setSummaries(prev => ({
                 ...prev,
-                [index]: summary
+                [index]: response.data.summary
             }));
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error summarizing profile:", err);
             setSummaries(prev => ({
                 ...prev,
-                [index]: "Failed to generate summary. Please try again."
+                [index]: err.response?.data?.error || "Failed to generate summary. Please try again."
             }));
         } finally {
             setSummarizing(prev => ({ ...prev, [index]: false }));
