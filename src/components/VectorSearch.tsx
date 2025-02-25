@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const VectorSearch = ({ className = '' }) => {
     const [jobDescription, setJobDescription] = useState('');
@@ -9,6 +10,55 @@ const VectorSearch = ({ className = '' }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [searchCompleted, setSearchCompleted] = useState(false);
+    const [summaries, setSummaries] = useState<Record<number, string>>({});
+    const [summarizing, setSummarizing] = useState<Record<number, boolean>>({});
+
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
+
+    const summarizeProfile = async (candidate: any, index: number) => {
+        if (summarizing[index]) return;
+        
+        try {
+            setSummarizing(prev => ({ ...prev, [index]: true }));
+            
+            // const prompt = `
+            //     Please provide a concise professional summary for this candidate profile:
+                
+            //     Name: ${candidate.metadata.name}
+            //     Skills: ${candidate.metadata.skills || 'Not specified'}
+            //     Experience: ${candidate.metadata.experience || 'Not specified'}
+            //     Projects: ${candidate.metadata.projects || 'Not specified'}
+                
+            //     Generate a 2-3 sentence professional summary highlighting key strengths experience and projects.
+            // `;
+            const prompt = `
+            Create a brief professional summary for the following candidate profile:
+            
+            Name: ${candidate.metadata.name}
+            Resume: ${candidate.metadata.fullResumeText}
+            
+            Summarize the candidate's key strengths, work experience, and notable projects in 2-3 sentences.
+        `;
+            
+            const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const summary = response.text();
+            
+            setSummaries(prev => ({
+                ...prev,
+                [index]: summary
+            }));
+        } catch (err) {
+            console.error("Error summarizing profile:", err);
+            setSummaries(prev => ({
+                ...prev,
+                [index]: "Failed to generate summary. Please try again."
+            }));
+        } finally {
+            setSummarizing(prev => ({ ...prev, [index]: false }));
+        }
+    };
 
     const handleSearch = async () => {
         if (!jobDescription.trim()) {
@@ -25,6 +75,7 @@ const VectorSearch = ({ className = '' }) => {
             setResults(response.data.results);
             setSearchCompleted(true);
         } catch (err) {
+            console.error('Error fetching candidates:', err);
             setError('Failed to fetch candidates. Please try again.');
         } finally {
             setLoading(false);
@@ -120,27 +171,36 @@ const VectorSearch = ({ className = '' }) => {
                                                     <p className="text-gray-600 text-sm">{candidate.metadata.experience}</p>
                                                 </div>
                                             )}
-                                            
-                                            {/* {candidate.metadata.projects && (
-                                                <div>
-                                                    <h3 className="text-sm font-semibold text-gray-700">Projects</h3>
-                                                    <p className="text-gray-600 text-sm">{candidate.metadata.projects}</p>
-                                                </div>
-                                            )} */}
                                         </div>
                                         
                                         <div className="mt-4 pt-4 border-t border-gray-100">
-                                            <button 
-                                                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200"
-                                                onClick={() => {
-                                                    const projectsSection = document.getElementById(`projects-${index}`);
-                                                    if (projectsSection) {
-                                                        projectsSection.classList.toggle('hidden');
-                                                    }
-                                                }}
-                                            >
-                                                View Full Profile
-                                            </button>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <button 
+                                                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors duration-200"
+                                                    onClick={() => {
+                                                        const projectsSection = document.getElementById(`projects-${index}`);
+                                                        if (projectsSection) {
+                                                            projectsSection.classList.toggle('hidden');
+                                                        }
+                                                    }}
+                                                >
+                                                    View Full Profile
+                                                </button>
+                                                
+                                                <button
+                                                    className={`px-3 py-1 rounded text-sm ${
+                                                        summarizing[index] 
+                                                            ? 'bg-gray-300 text-gray-700 cursor-not-allowed' 
+                                                            : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                                                    }`}
+                                                    onClick={() => summarizeProfile(candidate, index)}
+                                                    disabled={summarizing[index]}
+                                                >
+                                                    {summarizing[index] ? 'Summarizing...' : 'AI Summary'}
+                                                </button>
+                                            </div>
+                                        
+                                            
                                             <div id={`projects-${index}`} className="hidden">
                                                 {candidate.metadata.projects && (
                                                     <div>
@@ -149,6 +209,13 @@ const VectorSearch = ({ className = '' }) => {
                                                     </div>
                                                 )}
                                             </div>
+
+                                            {summaries[index] && (
+                                                <div className="mt-3 p-3 bg-indigo-50 rounded-lg">
+                                                    <h4 className="text-sm font-semibold text-gray-700 mb-1">AI-Generated Summary:</h4>
+                                                    <p className="text-sm text-gray-700">{summaries[index]}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
