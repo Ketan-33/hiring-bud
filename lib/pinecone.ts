@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const baseUrl = process.env.NEXT_PUBLIC_PINECONE_BASE_URL;
 const pineconeApiKey = process.env.NEXT_PUBLIC_PINECONE_API_KEY;
-const VECTOR_DIMENSION = 1536; // OpenAI's text-embedding-ada-002 dimension
+const VECTOR_DIMENSION = 1536;
 
 if (!baseUrl || !pineconeApiKey) {
   throw new Error('Missing Pinecone environment variables');
@@ -58,6 +58,38 @@ export async function upsertVector(
     throw error;
   }
 }
+
+
+export async function searchCandidates(
+  queryVector: number[],
+  topK = 5,
+  filter?: Record<string, any>
+) {
+  const endpoint = `${baseUrl}/query`;
+  const payload = {
+    vector: queryVector,
+    topK,
+    includeMetadata: true,
+    filter: filter // Optional filter for metadata fields
+  };
+
+  try {
+    const response = await axios.post(endpoint, payload, {
+      headers: {
+        'Api-Key': pineconeApiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data.matches.map(match => ({
+      score: match.score,
+      metadata: match.metadata
+    }));
+  } catch (error) {
+    console.error('Pinecone search error:', error);
+    throw error;
+  }
+}
+
 // Function to query vectors from Pinecone
 export async function queryVector(
   queryVector: number[],

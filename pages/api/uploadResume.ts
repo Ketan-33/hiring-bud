@@ -88,9 +88,13 @@ router
         message: 'File uploaded successfully',
         file: {
           filename: req.file.filename,
-          size: req.file.size
+          size: req.file.size,
+          id: req.file.filename // Adding id for reference
         },
-        extractedText: processedText
+        resumeContent: {
+          fullText: extractedText,
+          sections: processedText
+        }
       });
     } catch (error) {
       console.error('Upload handler error:', error);

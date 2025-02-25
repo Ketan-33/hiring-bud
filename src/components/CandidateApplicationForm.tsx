@@ -51,63 +51,69 @@ const CandidateApplicationForm = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        const validationErrors = validate();
-        if (Object.keys(validationErrors).length > 0) {
-          setErrors(validationErrors);
-          return;
+      e.preventDefault();
+      const validationErrors = validate();
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+    
+      const formDataToSend = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null) {
+          formDataToSend.append(key, value);
         }
-      
-        const formDataToSend = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (value !== null) {
-            formDataToSend.append(key, value);
-          }
+      });
+    
+      try {
+        // Upload resume first
+        const uploadResponse = await axios.post('/api/uploadResume', formDataToSend, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
-      
-        try {
-          // Upload resume first
-          const uploadResponse = await axios.post('/api/uploadResume', formDataToSend, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
-      
-          if (uploadResponse.status !== 200) {
-            throw new Error(uploadResponse.data.error || 'Upload failed');
-          }
-      
-          // Generate normalized vector
-          const vector = generateDummyVector(1536);
-          const vectorId = `candidate_${Date.now()}`; // Generate unique ID
-      
-          const metadata = {
-            name: formData.name,
-            email: formData.email,
-            linkedInUrl: formData.linkedInUrl,
-            skillsExperience: formData.skillsExperience,
-            resumeId: uploadResponse.data.id,
-            timestamp: new Date().toISOString()
-          };
-      
-          // Upsert to Pinecone with better error handling
-          try {
-            await upsertVector(vectorId, vector, metadata);
-            alert('Application submitted successfully!');
-            setFormData({
-              name: '',
-              email: '',
-              linkedInUrl: '',
-              resume: null,
-              skillsExperience: ''
-            });
-          } catch (pineconeError: any) {
-            console.error('Pinecone error:', pineconeError);
-            alert(`Error saving application: ${pineconeError.response?.data?.message || pineconeError.message}`);
-          }
-        } catch (error: any) {
-          console.error('Submission error:', error);
-          alert(`Error submitting application: ${error.message}`);
+    
+        if (uploadResponse.status !== 200) {
+          throw new Error(uploadResponse.data.error || 'Upload failed');
         }
-      };
+    
+        // Generate normalized vector
+        const vector = generateDummyVector(1536);
+        const vectorId = `candidate_${Date.now()}`; // Generate unique ID
+    
+        const metadata = {
+          name: formData.name,
+          email: formData.email,
+          linkedInUrl: formData.linkedInUrl,
+          skillsExperience: formData.skillsExperience,
+          resumeId: uploadResponse.data.file.id,
+          timestamp: new Date().toISOString(),
+          // Add resume sections to metadata
+          skills: uploadResponse.data.resumeContent.sections.skills,
+          experience: uploadResponse.data.resumeContent.sections.experience,
+          education: uploadResponse.data.resumeContent.sections.education,
+          projects: uploadResponse.data.resumeContent.sections.projects,
+          fullResumeText: uploadResponse.data.resumeContent.fullText
+        };
+    
+        // Upsert to Pinecone with better error handling
+        try {
+          await upsertVector(vectorId, vector, metadata);
+          alert('Application submitted successfully!');
+          setFormData({
+            name: '',
+            email: '',
+            linkedInUrl: '',
+            resume: null,
+            skillsExperience: ''
+          });
+        } catch (pineconeError: any) {
+          console.error('Pinecone error:', pineconeError);
+          alert(`Error saving application: ${pineconeError.response?.data?.message || pineconeError.message}`);
+        }
+      } catch (error: any) {
+        console.error('Submission error:', error);
+        alert(`Error submitting application: ${error.message}`);
+      }
+    };
 
     return (
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-md">
