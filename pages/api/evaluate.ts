@@ -16,9 +16,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Initialize the Gemini API client
-    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("GEMINI_API_KEY is not defined in environment variables");
+      return res.status(500).json({ 
+        error: 'API configuration error', 
+        details: 'Missing API key in server configuration'
+      });
+    }
+    
+    // Initialize with the verified API key
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     const prompt = `
       You are an expert HR professional evaluating candidates for job openings.
