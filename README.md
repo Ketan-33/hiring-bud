@@ -121,10 +121,3 @@ The Gemini API is used for:
 ## License
 
 MIT
-
-## Acknowledgements
-
-- Google Gemini AI
-- Pinecone Vector Database
-- Next.js
-- pdf-parse
